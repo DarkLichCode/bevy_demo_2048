@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use bevy::asset::Asset;
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
@@ -41,22 +43,21 @@ fn main() {
 		.run();
 }
 
-fn initColor() -> Vec<Color> {
-	let mut vecColor = Vec::new();
-	vecColor.push(COLOR_CELL_NULL);
-	vecColor.push(COLOR_CELL_2);
-	vecColor.push(COLOR_CELL_4);
-	vecColor.push(COLOR_CELL_8);
-	vecColor.push(COLOR_CELL_16);
-	vecColor.push(COLOR_CELL_32);
-	vecColor.push(COLOR_CELL_64);
-	vecColor.push(COLOR_CELL_128);
-	vecColor.push(COLOR_CELL_256);
-	vecColor.push(COLOR_CELL_512);
-	vecColor.push(COLOR_CELL_1024);
-	vecColor.push(COLOR_CELL_2048);
-
-	return vecColor;
+fn cell_color(cell_value: u32) -> bevy::render::color::Color {
+	match cell_value {
+		2 => COLOR_CELL_2,
+		4 => COLOR_CELL_4,
+		8 => COLOR_CELL_8,
+		16 => COLOR_CELL_16,
+		32 => COLOR_CELL_32,
+		64 => COLOR_CELL_64,
+		128 => COLOR_CELL_128,
+		256 => COLOR_CELL_256,
+		512 => COLOR_CELL_512,
+		1024 => COLOR_CELL_1024,
+		2048 => COLOR_CELL_2048,
+		_ => COLOR_CELL_NULL
+	}
 }
 
 fn setup(
