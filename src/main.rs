@@ -7,6 +7,7 @@ use bevy::asset::Asset;
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
+use bevy::text::Text2dBounds;
 use bevy::window::PresentMode;
 
 fn main() {
@@ -47,6 +48,7 @@ fn cell_color(cell_value: u32) -> bevy::render::color::Color {
 
 fn setup(
 	mut commands: Commands,
+	asset_server: Res<AssetServer>,
 	mut meshes: ResMut<Assets<Mesh>>,
 	mut materials: ResMut<Assets<ColorMaterial>>
 ) {
@@ -75,6 +77,26 @@ fn setup(
 		}
 	}
 
+	let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+	let text_style = TextStyle {
+		font,
+		font_size: 50.0,
+		color: Color::BLACK,
+	};
+	let box_size = Vec2::new(side_length, side_length);
+	commands.spawn(Text2dBundle {
+		text: Text::from_section("SCORE:", text_style),
+		text_2d_bounds: Text2dBounds {
+			// Wrap text in the rectangle
+			size: box_size,
+		},
+		transform: Transform::from_xyz(
+			-WINDOW_WIDTH / 2.0,
+			WINDOW_HEIGHT / 2.0,
+			0.0,
+		),
+		..default()
+	});
 }
 
 
