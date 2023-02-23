@@ -97,7 +97,7 @@ fn setup(
 				..default()
 			});
 
-			commands.spawn(Text2dBundle {
+			commands.spawn((Text2dBundle {
 				text: Text::from_section("2048", text_style.clone()).with_alignment(TextAlignment::CENTER),
 				text_2d_bounds: Text2dBounds {
 					// Wrap text in the rectangle
@@ -111,7 +111,7 @@ fn setup(
 					y_offset - (i as f32) * (side_length + CELL_SPACE),
 					1.0),
 				..default()
-			});
+			}, CELL_VALUE));
 		}
 	}
 
@@ -132,7 +132,8 @@ fn setup(
 
 fn keyboard_input(
 	keyboard_input: Res<Input<KeyCode>>,
-	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>
+	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>,
+	mut query: Query<(&mut Text), (With<CELL_VALUE>)>
 ) {
 	let mut moved = MOVE_DIRECTION::NONE;
 	if keyboard_input.just_pressed(KeyCode::Up) {
@@ -146,6 +147,10 @@ fn keyboard_input(
 	}
 	if keyboard_input.just_pressed(KeyCode::Left) {
 		moved = MOVE_DIRECTION::LEFT;
+		let mut i = 0;
+		for mut text in query.iter_mut() {
+			text.sections[0].value = cell_Value_Save.valueSave[0][0].to_string();
+		}
 	}
 
 	Move_Value(moved, &mut cell_Value_Save.valueSave);

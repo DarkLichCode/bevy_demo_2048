@@ -35,6 +35,9 @@ pub struct CELL_VALUE_SAVE {
 	pub(crate) valueSave: Vec<Vec<u32>>
 }
 
+#[derive(Component)]
+pub struct CELL_VALUE;
+
 pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut Vec<Vec<u32>>) {
 
 	match direction {
