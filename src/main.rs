@@ -3,6 +3,8 @@
 mod config;
 use config::*;
 
+use rand::Rng;
+
 use bevy::asset::Asset;
 use bevy::prelude::*;
 use bevy::render::render_resource::ShaderType;
@@ -54,21 +56,18 @@ fn setup(
 	mut materials: ResMut<Assets<ColorMaterial>>
 ) {
 
-	let mut cell_value_save_temp: Vec<Vec<u32>> = Vec::new();
-	for i in 0..CELL_SIDE_NUM {
-		let mut cell_value_save_temp_row: Vec<u32> = Vec::new();
-		for j in 0..CELL_SIDE_NUM {
-			cell_value_save_temp_row.push(i * CELL_SIDE_NUM + j + 1);
-		}
-		cell_value_save_temp.push(cell_value_save_temp_row);
-	}
-	commands.insert_resource(CELL_VALUE_SAVE{valueSave: cell_value_save_temp});
-	commands.spawn(Camera2dBundle::default());
+	// 初始化存储数组
+	let mut cell_value_save_temp: Vec<Vec<u32>> = Init_cell_value_save();
 
+	// 计算左上方格偏移
 	let side_length: f32 = (WINDOW_HEIGHT - CELL_SPACE * (CELL_SIDE_NUM as f32 + 1.0)) / CELL_SIDE_NUM as f32;
 	let mut x_offset = -(side_length + CELL_SPACE) * (CELL_SIDE_NUM as f32 / 2.0 - 0.5);
 	let mut y_offset = (side_length + CELL_SPACE) * (CELL_SIDE_NUM as f32 / 2.0 - 0.5);
 	x_offset = 2.0 * x_offset - (-1.0) * (WINDOW_WIDTH / 2.0 - CELL_SPACE) - side_length / 2.0;
+
+	// 将存储数组设为资源
+	commands.insert_resource(CELL_VALUE_SAVE{valueSave: cell_value_save_temp.clone()});
+	commands.spawn(Camera2dBundle::default());
 
 	commands.spawn(MaterialMesh2dBundle {
 		mesh: meshes.add(shape::Box::new(WINDOW_HEIGHT, WINDOW_HEIGHT, 0.0).into()).into(),
@@ -77,6 +76,7 @@ fn setup(
 		..default()
 	});
 
+	// 初始化文字信息
 	let font = asset_server.load("fonts/FiraSans-Bold.ttf");
 	let text_style = TextStyle {
 		font,
@@ -87,9 +87,17 @@ fn setup(
 
 	for i in 0..CELL_SIDE_NUM {
 		for j in 0..CELL_SIDE_NUM {
+
+			// 格中显示内容
+			let mut text = "";
+			if cell_value_save_temp[i as usize][j as usize] == 2 {
+				text = "2";
+			}
+
+			// 绑定格，根据数字来确定格的颜色
 			commands.spawn(MaterialMesh2dBundle {
 				mesh: meshes.add(shape::Box::new(side_length, side_length, 0.0).into()).into(),
-				material: materials.add(ColorMaterial::from(COLOR_CELL_NULL)),
+				material: materials.add(ColorMaterial::from(cell_color(cell_value_save_temp[i as usize][j as usize]))),
 				transform: Transform::from_xyz(
 					x_offset + (j as f32) * (side_length + CELL_SPACE),
 					y_offset - (i as f32) * (side_length + CELL_SPACE),
@@ -97,8 +105,9 @@ fn setup(
 				..default()
 			});
 
+			// 绑定数字
 			commands.spawn((Text2dBundle {
-				text: Text::from_section("2048", text_style.clone()).with_alignment(TextAlignment::CENTER),
+				text: Text::from_section(text, text_style.clone()).with_alignment(TextAlignment::CENTER),
 				text_2d_bounds: Text2dBounds {
 					// Wrap text in the rectangle
 					size: box_size,
@@ -133,7 +142,7 @@ fn setup(
 fn keyboard_input(
 	keyboard_input: Res<Input<KeyCode>>,
 	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>,
-	mut query: Query<(&mut Text), (With<CELL_VALUE>)>
+	mut text_query: Query<(&mut Text), (With<CELL_VALUE>)>
 ) {
 	let mut moved = MOVE_DIRECTION::NONE;
 	if keyboard_input.just_pressed(KeyCode::Up) {
@@ -147,13 +156,22 @@ fn keyboard_input(
 	}
 	if keyboard_input.just_pressed(KeyCode::Left) {
 		moved = MOVE_DIRECTION::LEFT;
-		let mut i = 0;
-		for mut text in query.iter_mut() {
-			text.sections[0].value = cell_Value_Save.valueSave[0][0].to_string();
+	}
+
+	match moved {
+		MOVE_DIRECTION::NONE => return,
+		_ => {
+			let mut i = 0;
+			Move_Value(moved, &mut cell_Value_Save.valueSave);
+			for mut text in text_query.iter_mut() {
+				if cell_Value_Save.valueSave[i / 4][i % 4] != 0 {
+					text.sections[0].value = cell_Value_Save.valueSave[i / 4][i % 4].to_string();
+				}
+				i += 1;
+			}
 		}
 	}
 
-	Move_Value(moved, &mut cell_Value_Save.valueSave);
 }
 
 
