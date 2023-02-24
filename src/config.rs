@@ -1,4 +1,4 @@
-
+use bevy::asset::HandleId;
 use bevy::prelude::*;
 use rand::Rng;
 
@@ -33,7 +33,8 @@ pub enum MOVE_DIRECTION {
 
 #[derive(Resource)]
 pub struct CELL_VALUE_SAVE {
-	pub(crate) valueSave: Vec<Vec<u32>>
+	pub(crate) valueSave: Vec<Vec<u32>>,
+	pub(crate) cellBackGround: Vec<HandleId>
 }
 
 #[derive(Component)]
