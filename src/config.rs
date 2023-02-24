@@ -34,7 +34,8 @@ pub enum MOVE_DIRECTION {
 #[derive(Resource)]
 pub struct CELL_VALUE_SAVE {
 	pub(crate) valueSave: Vec<Vec<u32>>,
-	pub(crate) cellBackGround: Vec<HandleId>
+	pub(crate) cellBackGround: Vec<HandleId>,
+	pub(crate) score: u32
 }
 
 #[derive(Component)]
@@ -62,11 +63,12 @@ pub fn Init_cell_value_save() -> Vec<Vec<u32>> {
 	return cell_value_save_temp;
 }
 
-pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut Vec<Vec<u32>>) {
+pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut CELL_VALUE_SAVE) {
 	match direction {
 		MOVE_DIRECTION::NONE => return,
 		_ => {
-			saveValue[0][0] += 1;
+			saveValue.valueSave[0][0] += 1;
+			saveValue.score += 1;
 		}
 	}
 }

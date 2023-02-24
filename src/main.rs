@@ -132,23 +132,32 @@ fn setup(
 	commands.insert_resource(
 		CELL_VALUE_SAVE{
 			valueSave: cell_value_save_temp.clone(),
-			cellBackGround: cell_background_save
+			cellBackGround: cell_background_save,
+			score: 0
 		}
 	);
 
-	commands.spawn(Text2dBundle {
-		text: Text::from_section("SCORE:", text_style.clone()),
-		text_2d_bounds: Text2dBounds {
-			// Wrap text in the rectangle
-			size: box_size,
-		},
-		transform: Transform::from_xyz(
-			-WINDOW_WIDTH / 2.0,
-			WINDOW_HEIGHT / 2.0,
-			0.0,
-		),
-		..default()
-	});
+	commands.spawn(
+		Text2dBundle {
+			text: Text::from_sections(
+				[
+					TextSection::new("SCORE\n", text_style.clone()),
+					TextSection::new("0", text_style.clone()),
+				]
+
+			),
+			text_2d_bounds: Text2dBounds {
+				// Wrap text in the rectangle
+				size: box_size,
+			},
+			transform: Transform::from_xyz(
+				-WINDOW_WIDTH / 2.0,
+				WINDOW_HEIGHT / 2.0,
+				0.0,
+			),
+			..default()
+		}
+	);
 }
 
 fn keyboard_input(
@@ -156,6 +165,7 @@ fn keyboard_input(
 	asset_server: Res<AssetServer>,
 	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>,
 	mut text_query: Query<(&mut Text), (With<CELL_VALUE>)>,
+	mut score_query: Query<(&mut Text), (Without<CELL_VALUE>)>,
 	mut materials: ResMut<Assets<ColorMaterial>>
 ) {
 	let mut moved = MOVE_DIRECTION::NONE;
@@ -176,7 +186,9 @@ fn keyboard_input(
 		MOVE_DIRECTION::NONE => return,
 		_ => {
 			let mut i = 0;
-			Move_Value(moved, &mut cell_Value_Save.valueSave);
+			Move_Value(moved, &mut cell_Value_Save);
+
+			score_query.single_mut().sections[1].value = cell_Value_Save.score.to_string();
 
 			let side_length: f32 = (WINDOW_HEIGHT - CELL_SPACE * (CELL_SIDE_NUM as f32 + 1.0)) / CELL_SIDE_NUM as f32;
 			let font = asset_server.load("fonts/FiraSans-Bold.ttf");
