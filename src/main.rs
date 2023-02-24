@@ -3,6 +3,9 @@
 mod config;
 use config::*;
 
+mod gameRule;
+use gameRule::*;
+
 use rand::Rng;
 
 use bevy::asset::{Asset, HandleId};
