@@ -220,6 +220,12 @@ fn keyboard_input(
 				i += 1;
 			}
 
+			let result = check_result(&mut cell_Value_Save);
+			match result {
+				VICTORY_or_DEFEAT::VICTORY => println!("victory"),
+				VICTORY_or_DEFEAT::DEFEAT => println!("defeat"),
+				VICTORY_or_DEFEAT::NONE => println!("none")
+			}
 		}
 	}
 

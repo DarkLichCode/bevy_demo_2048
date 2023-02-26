@@ -31,6 +31,12 @@ pub enum MOVE_DIRECTION {
 	RIGHT
 }
 
+pub enum VICTORY_or_DEFEAT {
+	VICTORY,
+	NONE,
+	DEFEAT
+}
+
 #[derive(Resource)]
 pub struct CELL_VALUE_SAVE {
 	pub(crate) valueSave: Vec<Vec<u32>>,
