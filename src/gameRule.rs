@@ -27,8 +27,8 @@ pub fn Init_cell_value_save() -> Vec<Vec<u32>> {
 // 判断游戏胜负
 pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
 	// 有2048判断玩家胜利
-	for i in 0..saveValue.valueSave.len() {
-		for j in 0..saveValue.valueSave[i].len() {
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in 0..CELL_SIDE_NUM as usize {
 			if saveValue.valueSave[i][j] == 2048 {
 				return VICTORY_or_DEFEAT::VICTORY;
 			}
@@ -36,8 +36,8 @@ pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
 	}
 
 	// 未胜利，有空位，游戏继续
-	for i in 0..saveValue.valueSave.len() {
-		for j in 0..saveValue.valueSave[i].len() {
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in 0..CELL_SIDE_NUM as usize {
 			if saveValue.valueSave[i][j] == 0 {
 				return VICTORY_or_DEFEAT::NONE;
 			}
@@ -45,8 +45,8 @@ pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
 	}
 
 	// 没有空位，但是有可合并的点，游戏继续
-	for i in 0..saveValue.valueSave.len()-1 {
-		for j in 0..saveValue.valueSave[i].len()-1 {
+	for i in 0..CELL_SIDE_NUM as usize-1 {
+		for j in 0..CELL_SIDE_NUM as usize-1 {
 			if saveValue.valueSave[i][j] == saveValue.valueSave[i + 1][j] ||
 				saveValue.valueSave[i][j] == saveValue.valueSave[i][j + 1] {
 				return VICTORY_or_DEFEAT::NONE;
@@ -58,20 +58,35 @@ pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
 	return VICTORY_or_DEFEAT::DEFEAT;
 }
 
+// 判断是否有空位
+pub fn Have_Empty(saveValue: &mut Vec<Vec<u32>>) -> bool {
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in 0..CELL_SIDE_NUM as usize {
+			if saveValue[i][j] == 0 {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
 // 移动函数
 pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut CELL_VALUE_SAVE) {
 	// 判断是否要新生成 2或4 的flag
-	let mut generateNew = false;
+	let mut isMove = false;
+
 	match direction {
 		MOVE_DIRECTION::NONE => return ,
-		MOVE_DIRECTION::RIGHT => generateNew = To_Right(&mut saveValue.valueSave),
-		_ => {
-			return;
-		}
+		MOVE_DIRECTION::RIGHT => isMove = To_Right(saveValue),
+		MOVE_DIRECTION::LEFT => isMove = To_Left(saveValue),
+		MOVE_DIRECTION::UP => isMove = To_Up(saveValue),
+		MOVE_DIRECTION::DOWN => isMove = To_Down(saveValue),
 	}
 
-	// 在空位生成新的数
-	if generateNew {
+	let have_empty = Have_Empty(&mut saveValue.valueSave);
+
+		// 在空位生成新的数
+	if isMove && have_empty {
 		let mut temp: u32 = rand::thread_rng().gen_range(0..10) as u32;
 		if temp > 0 {
 			temp = 2;
@@ -79,8 +94,8 @@ pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut CELL_VALUE_SAVE) {
 			temp = 4;
 		}
 		let mut pos_save: Vec<Vec<usize>> = Vec::new();
-		for i in 0..saveValue.valueSave.len() {
-			for j in 0..saveValue.valueSave[i].len() {
+		for i in 0..CELL_SIDE_NUM as usize {
+			for j in 0..CELL_SIDE_NUM as usize {
 				if saveValue.valueSave[i][j] == 0 {
 					let pos = vec![i, j];
 					pos_save.push(pos);
@@ -95,14 +110,189 @@ pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut CELL_VALUE_SAVE) {
 }
 
 // 向右移动
-pub fn To_Right(saveValue: &mut Vec<Vec<u32>>) -> bool {
-	for i in 0..saveValue.len() {
-		for j in 0..saveValue[i].len() {
-			if saveValue[i][j] == 0 {
-				return true;
+pub fn To_Right(saveValue: &mut CELL_VALUE_SAVE) -> bool {
+
+	let mut isMove = false;
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in (0..CELL_SIDE_NUM as usize).rev() {
+			if saveValue.valueSave[i][j] == 0 {
+				continue;
+			}
+			for k in (0..j).rev() {
+				if saveValue.valueSave[i][k] == 0 {
+					continue;
+				}
+				if saveValue.valueSave[i][k] != saveValue.valueSave[i][j] {
+					break;
+				} else {
+					saveValue.valueSave[i][j] += saveValue.valueSave[i][k];
+					saveValue.score += saveValue.valueSave[i][j];
+					saveValue.valueSave[i][k] = 0;
+					isMove = true;
+					break;
+				}
 			}
 		}
 	}
 
-	return false;
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in (0..CELL_SIDE_NUM as usize).rev() {
+			if saveValue.valueSave[i][j] != 0 {
+				continue;
+			}
+			for k in (0..j).rev() {
+				if saveValue.valueSave[i][k] == 0 {
+					continue;
+				} else {
+					saveValue.valueSave[i][j] = saveValue.valueSave[i][k];
+					saveValue.valueSave[i][k] = 0;
+					isMove = true;
+					break;
+				}
+			}
+		}
+	}
+
+	return isMove;
+}
+
+// 向左移动
+pub fn To_Left(saveValue: &mut CELL_VALUE_SAVE) -> bool {
+
+	let mut isMove = false;
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in 0..CELL_SIDE_NUM as usize as usize {
+			if saveValue.valueSave[i][j] == 0 {
+				continue;
+			}
+			for k in j+1..CELL_SIDE_NUM as usize {
+				if saveValue.valueSave[i][k] == 0 {
+					continue;
+				}
+				if saveValue.valueSave[i][k] != saveValue.valueSave[i][j] {
+					break;
+				} else {
+					saveValue.valueSave[i][j] += saveValue.valueSave[i][k];
+					saveValue.score += saveValue.valueSave[i][j];
+					saveValue.valueSave[i][k] = 0;
+					isMove = true;
+					break;
+				}
+			}
+		}
+	}
+
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in 0..CELL_SIDE_NUM as usize {
+			if saveValue.valueSave[i][j] != 0 {
+				continue;
+			}
+			for k in j+1..CELL_SIDE_NUM as usize {
+				if saveValue.valueSave[i][k] == 0 {
+					continue;
+				} else {
+					saveValue.valueSave[i][j] = saveValue.valueSave[i][k];
+					saveValue.valueSave[i][k] = 0;
+					isMove = true;
+					break;
+				}
+			}
+		}
+	}
+
+	return isMove;
+}
+
+// 向上移动
+pub fn To_Up(saveValue: &mut CELL_VALUE_SAVE) -> bool {
+
+	let mut isMove = false;
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in 0..CELL_SIDE_NUM as usize {
+			if saveValue.valueSave[j][i] == 0 {
+				continue;
+			}
+			for k in j+1..CELL_SIDE_NUM as usize {
+				if saveValue.valueSave[k][i] == 0 {
+					continue;
+				}
+				if saveValue.valueSave[k][i] != saveValue.valueSave[j][i] {
+					break;
+				} else {
+					saveValue.valueSave[j][i] += saveValue.valueSave[k][i];
+					saveValue.score += saveValue.valueSave[j][i];
+					saveValue.valueSave[k][i] = 0;
+					isMove = true;
+					break;
+				}
+			}
+		}
+	}
+
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in 0..CELL_SIDE_NUM as usize {
+			if saveValue.valueSave[j][i] != 0 {
+				continue;
+			}
+			for k in j+1..CELL_SIDE_NUM as usize {
+				if saveValue.valueSave[k][i] == 0 {
+					continue;
+				} else {
+					saveValue.valueSave[j][i] = saveValue.valueSave[k][i];
+					saveValue.valueSave[k][i] = 0;
+					isMove = true;
+					break;
+				}
+			}
+		}
+	}
+
+	return isMove;
+}
+
+// 向下移动
+pub fn To_Down(saveValue: &mut CELL_VALUE_SAVE) -> bool {
+
+	let mut isMove = false;
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in (0..CELL_SIDE_NUM as usize).rev() {
+			if saveValue.valueSave[j][i] == 0 {
+				continue;
+			}
+			for k in (0..j).rev() {
+				if saveValue.valueSave[k][i] == 0 {
+					continue;
+				}
+				if saveValue.valueSave[k][i] != saveValue.valueSave[j][i] {
+					break;
+				} else {
+					saveValue.valueSave[j][i] += saveValue.valueSave[k][i];
+					saveValue.score += saveValue.valueSave[j][i];
+					saveValue.valueSave[k][i] = 0;
+					isMove = true;
+					break;
+				}
+			}
+		}
+	}
+
+	for i in 0..CELL_SIDE_NUM as usize {
+		for j in (0..CELL_SIDE_NUM as usize).rev() {
+			if saveValue.valueSave[j][i] != 0 {
+				continue;
+			}
+			for k in (0..j).rev() {
+				if saveValue.valueSave[k][i] == 0 {
+					continue;
+				} else {
+					saveValue.valueSave[j][i] = saveValue.valueSave[k][i];
+					saveValue.valueSave[k][i] = 0;
+					isMove = true;
+					break;
+				}
+			}
+		}
+	}
+
+	return isMove;
 }
