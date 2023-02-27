@@ -1,6 +1,5 @@
 use bevy::asset::HandleId;
 use bevy::prelude::*;
-use rand::Rng;
 
 pub static WINDOW_WIDTH: f32 = 800.0;
 pub static WINDOW_HEIGHT: f32 = 600.0;
