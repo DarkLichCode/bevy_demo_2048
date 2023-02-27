@@ -64,7 +64,12 @@ pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut CELL_VALUE_SAVE) {
 	}
 
 	if generateTwo {
-		let temp: u32 = rand::thread_rng().gen_range(1..3) as u32 * 2;
+		let mut temp: u32 = rand::thread_rng().gen_range(0..10) as u32;
+		if temp > 0 {
+			temp = 2;
+		} else {
+			temp = 4;
+		}
 		let mut pos_save: Vec<Vec<usize>> = Vec::new();
 		for i in 0..saveValue.valueSave.len() {
 			for j in 0..saveValue.valueSave[i].len() {

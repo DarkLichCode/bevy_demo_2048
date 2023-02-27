@@ -126,7 +126,7 @@ fn setup(
 						1.0),
 					..default()
 				},
-				CELL_VALUE
+				CellValue
 			));
 		}
 	}
@@ -167,8 +167,8 @@ fn keyboard_input(
 	keyboard_input: Res<Input<KeyCode>>,
 	asset_server: Res<AssetServer>,
 	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>,
-	mut text_query: Query<(&mut Text), (With<CELL_VALUE>)>,
-	mut score_query: Query<(&mut Text), (Without<CELL_VALUE>)>,
+	mut text_query: Query<(&mut Text), (With<CellValue>)>,
+	mut score_query: Query<(&mut Text), (Without<CellValue>)>,
 	mut materials: ResMut<Assets<ColorMaterial>>
 ) {
 	let mut moved = MOVE_DIRECTION::NONE;
@@ -228,7 +228,6 @@ fn keyboard_input(
 			}
 		}
 	}
-
 }
 
 

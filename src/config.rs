@@ -44,5 +44,5 @@ pub struct CELL_VALUE_SAVE {
 }
 
 #[derive(Component)]
-pub struct CELL_VALUE;
+pub struct CellValue;
 
