@@ -30,6 +30,7 @@ pub enum MOVE_DIRECTION {
 	RIGHT
 }
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
 pub enum VICTORY_or_DEFEAT {
 	VICTORY,
 	NONE,
