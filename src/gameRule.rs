@@ -2,7 +2,7 @@
 use rand::Rng;
 use crate::config::*;
 
-// 初始化
+// 初始化，空白面板，在随机的两个位置生成 2
 pub fn Init_cell_value_save() -> Vec<Vec<u32>> {
 	let mut cell_value_save_temp: Vec<Vec<u32>> = Vec::new();
 	let mut pos_save: Vec<Vec<usize>> = Vec::new();
@@ -24,7 +24,9 @@ pub fn Init_cell_value_save() -> Vec<Vec<u32>> {
 	return cell_value_save_temp;
 }
 
+// 判断游戏胜负
 pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
+	// 有2048判断玩家胜利
 	for i in 0..saveValue.valueSave.len() {
 		for j in 0..saveValue.valueSave[i].len() {
 			if saveValue.valueSave[i][j] == 2048 {
@@ -33,6 +35,7 @@ pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
 		}
 	}
 
+	// 未胜利，有空位，游戏继续
 	for i in 0..saveValue.valueSave.len() {
 		for j in 0..saveValue.valueSave[i].len() {
 			if saveValue.valueSave[i][j] == 0 {
@@ -41,6 +44,7 @@ pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
 		}
 	}
 
+	// 没有空位，但是有可合并的点，游戏继续
 	for i in 0..saveValue.valueSave.len()-1 {
 		for j in 0..saveValue.valueSave[i].len()-1 {
 			if saveValue.valueSave[i][j] == saveValue.valueSave[i + 1][j] ||
@@ -50,20 +54,24 @@ pub fn check_result(saveValue: &mut CELL_VALUE_SAVE) -> VICTORY_or_DEFEAT {
 		}
 	}
 
+	// 以上都不满足，无法再移动，玩家输
 	return VICTORY_or_DEFEAT::DEFEAT;
 }
 
+// 移动函数
 pub fn Move_Value(direction: MOVE_DIRECTION, saveValue: &mut CELL_VALUE_SAVE) {
-	let mut generateTwo = false;
+	// 判断是否要新生成 2或4 的flag
+	let mut generateNew = false;
 	match direction {
 		MOVE_DIRECTION::NONE => return ,
-		MOVE_DIRECTION::RIGHT => generateTwo = To_Right(&mut saveValue.valueSave),
+		MOVE_DIRECTION::RIGHT => generateNew = To_Right(&mut saveValue.valueSave),
 		_ => {
 			return;
 		}
 	}
 
-	if generateTwo {
+	// 在空位生成新的数
+	if generateNew {
 		let mut temp: u32 = rand::thread_rng().gen_range(0..10) as u32;
 		if temp > 0 {
 			temp = 2;
