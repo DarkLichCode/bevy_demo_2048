@@ -10,7 +10,6 @@ use rand::Rng;
 
 use bevy::asset::{Asset, HandleId};
 use bevy::prelude::*;
-use bevy::reflect::erased_serde::__private::serde::__private::de::Content::String;
 use bevy::render::render_resource::ShaderType;
 use bevy::sprite::{Anchor, MaterialMesh2dBundle};
 use bevy::text::Text2dBounds;
@@ -31,8 +30,13 @@ fn main() {
 			..default()
 		}))
 		.insert_resource(ClearColor(Color::rgb(0.9, 0.9, 0.9)))
-		.add_startup_system(setup)
-		.add_system(keyboard_input)
+		.add_state(VICTORY_or_DEFEAT::NONE)
+		// .add_startup_system(setup)
+		.add_system_set(SystemSet::on_enter(VICTORY_or_DEFEAT::NONE).with_system(setup))
+		.add_system_set(SystemSet::on_update(VICTORY_or_DEFEAT::NONE).with_system(keyboard_input))
+		.add_system_set(SystemSet::on_enter(VICTORY_or_DEFEAT::DEFEAT).with_system(DefeatFunction))
+		.add_system_set(SystemSet::on_enter(VICTORY_or_DEFEAT::VICTORY).with_system(VictoryFunction))
+		// .add_system(keyboard_input)
 		.run();
 }
 
@@ -169,7 +173,8 @@ fn keyboard_input(
 	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>,
 	mut text_query: Query<(&mut Text), (With<CellValue>)>,
 	mut score_query: Query<(&mut Text), (Without<CellValue>)>,
-	mut materials: ResMut<Assets<ColorMaterial>>
+	mut materials: ResMut<Assets<ColorMaterial>>,
+	mut app_state: ResMut<State<VICTORY_or_DEFEAT>>,
 ) {
 	let mut moved = MOVE_DIRECTION::NONE;
 	if keyboard_input.just_pressed(KeyCode::Up) {
@@ -222,10 +227,78 @@ fn keyboard_input(
 
 			let result = check_result(&mut cell_Value_Save);
 			match result {
-				VICTORY_or_DEFEAT::VICTORY => println!("victory"),
-				VICTORY_or_DEFEAT::DEFEAT => println!("defeat"),
+				VICTORY_or_DEFEAT::VICTORY => {
+					println!("victory");
+					app_state.overwrite_set(VICTORY_or_DEFEAT::VICTORY);
+				},
+				VICTORY_or_DEFEAT::DEFEAT => {
+					println!("defeat");
+					app_state.overwrite_set(VICTORY_or_DEFEAT::DEFEAT);
+				},
 				VICTORY_or_DEFEAT::NONE => println!("none")
 			}
 		}
 	}
+}
+
+fn DefeatFunction(
+	mut commands: Commands,
+	asset_server: Res<AssetServer>,
+	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>,
+	mut app_state: ResMut<State<VICTORY_or_DEFEAT>>,
+	entities: Query<Entity, Without<Camera>>
+) {
+	for entityQuery in &entities {
+		commands.entity(entityQuery).despawn();
+	}
+	let box_size = Vec2::new(WINDOW_HEIGHT, WINDOW_HEIGHT);
+	let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+	let text_style = TextStyle {
+		font,
+		font_size: WINDOW_HEIGHT / 5.0,
+		color: COLOR_BROWN,
+	};
+
+	let mut text = String::from("YOU  LOST\nSCORE: ");
+	text.push_str(&cell_Value_Save.score.to_string());
+	commands.spawn((
+		Text2dBundle {
+			text: Text::from_section(text, text_style.clone()).with_alignment(TextAlignment::CENTER),
+			text_2d_bounds: Text2dBounds {
+				size: box_size,
+			},
+			..default()
+		}
+	));
+}
+
+fn VictoryFunction(
+	mut commands: Commands,
+	asset_server: Res<AssetServer>,
+	mut cell_Value_Save: ResMut<CELL_VALUE_SAVE>,
+	mut app_state: ResMut<State<VICTORY_or_DEFEAT>>,
+	entities: Query<Entity, Without<Camera>>
+) {
+	for entityQuery in &entities {
+		commands.entity(entityQuery).despawn();
+	}
+	let box_size = Vec2::new(WINDOW_HEIGHT, WINDOW_HEIGHT);
+	let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+	let text_style = TextStyle {
+		font,
+		font_size: WINDOW_HEIGHT / 5.0,
+		color: COLOR_BROWN,
+	};
+
+	let mut text = String::from("WINNER\nSCORE: ");
+	text.push_str(&cell_Value_Save.score.to_string());
+	commands.spawn((
+		Text2dBundle {
+			text: Text::from_section(text, text_style.clone()).with_alignment(TextAlignment::CENTER),
+			text_2d_bounds: Text2dBounds {
+				size: box_size,
+			},
+			..default()
+		}
+	));
 }
